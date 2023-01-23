@@ -13,10 +13,30 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Repo">
+      <UniqueIdentifier>{bba76d9d-0b0c-427d-92d7-a6950ee3f3a4}</UniqueIdentifier>
+      <Extensions>md;,txt;.gitignore;.gitattributes</Extensions>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CPPInject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.gitattributes">
+      <Filter>Repo</Filter>
+    </None>
+    <None Include="..\.gitignore">
+      <Filter>Repo</Filter>
+    </None>
+    <None Include="..\README.md">
+      <Filter>Repo</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\LICENSE.txt">
+      <Filter>Repo</Filter>
+    </Text>
   </ItemGroup>
 </Project>
