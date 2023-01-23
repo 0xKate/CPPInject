@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33205.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CPPInject", "CPPInject\CPPInject.vcxproj", "{AAF4F90C-C097-4004-B580-168C7F35BAFE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AAF4F90C-C097-4004-B580-168C7F35BAFE}.Debug|x64.ActiveCfg = Debug|x64
+		{AAF4F90C-C097-4004-B580-168C7F35BAFE}.Debug|x64.Build.0 = Debug|x64
+		{AAF4F90C-C097-4004-B580-168C7F35BAFE}.Debug|x86.ActiveCfg = Debug|Win32
+		{AAF4F90C-C097-4004-B580-168C7F35BAFE}.Debug|x86.Build.0 = Debug|Win32
+		{AAF4F90C-C097-4004-B580-168C7F35BAFE}.Release|x64.ActiveCfg = Release|x64
+		{AAF4F90C-C097-4004-B580-168C7F35BAFE}.Release|x64.Build.0 = Release|x64
+		{AAF4F90C-C097-4004-B580-168C7F35BAFE}.Release|x86.ActiveCfg = Release|Win32
+		{AAF4F90C-C097-4004-B580-168C7F35BAFE}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E8E14162-41A1-4767-ABE2-E4085FE94B7F}
+	EndGlobalSection
+EndGlobal
