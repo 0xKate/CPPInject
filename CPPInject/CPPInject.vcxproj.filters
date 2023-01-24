@@ -22,6 +22,9 @@
     <ClCompile Include="CPPInject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="x86Injector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.gitattributes">
@@ -38,5 +41,10 @@
     <Text Include="..\LICENSE.txt">
       <Filter>Repo</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="x86Injector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
