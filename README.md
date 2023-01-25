@@ -29,11 +29,11 @@ Usage:
 
 ### Batch Script
 
-For a one click launch and inject of something you can use make a .bat file and use this batch script.
+For a one click launch and inject of something you can make a .bat file and use this batch script.
 
 ```batch
 start "" .\CPPInject.exe --dll "C:\path\to\file.dll" --exe "D:\path\to\file.exe"
 ```
 ```batch
-start "" .\CPPInject.exe --pid 11111 --exe "D:\path\to\file.exe"
+start "" .\CPPInject.exe --dll "D:\path\to\file.dll" --pid 11111
 ```
