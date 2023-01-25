@@ -68,8 +68,7 @@ int main(int argc, char** argv)
 
     if (argResult.count("exe") + argResult.count("pid") > 1)
     {
-        std::cerr << "Input Error: --pid and --exe cannot be used at the same time!\n\n";
-        std::cout << argParser.help() << std::endl;
+        std::cerr << "\nERROR: --pid and --exe cannot be used at the same time! Use -h for more info.\n\n";
         return -1;
     }
 
@@ -90,15 +89,23 @@ int main(int argc, char** argv)
         if (verbose)
             std::cout << "DLL Path: " << sourceDLL << std::endl;
     }
+    else
+    {
+        std::cerr << "\nERROR: Path to a .dll file is required! Use -h for more info.\n\n";
+        return -1;
+    }
 
     x86Injector injector = x86Injector(sourceDLL);
 
-    if (targetPID != NULL) {
+    if (argResult.count("pid") > 0) {
         injector.Inject(targetPID);
     }
-
-    if (!targetEXE.empty()) {
+    else if (argResult.count("exe") > 0) {
         injector.LaunchAndInject(targetEXE);
+    }
+    else {
+        std::cerr << "\nERROR: must supply a target executable to launch or pid of a running process! Use -h for more info.\n\n";
+        return -1;
     }
 
     return EXIT_SUCCESS;
