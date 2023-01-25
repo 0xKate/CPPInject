@@ -29,6 +29,8 @@
 #include <windows.h>
 #include <Shlwapi.h>
 #include "x86Injector.h"
+#include "cxxopts.hpp"
+
 //#include "argparse.hpp"
 
 int main(int argc, char** argv)
@@ -39,69 +41,66 @@ int main(int argc, char** argv)
     printf("This is free software, and you are welcome to redistribute it under certain conditions.\n");
     printf("CPP Injector is distributed under the GNU GPLv3 license.\n");
     printf("See https://github.com/0xKate/CPPInject/LICENSE.txt for more info.\n");
-    printf("Source code @: https://github.com/0xKate/CPPInject\n\n");
+    printf("Source code @: https://github.com/0xKate/CPPInject\n");
 
-    /*
-    argparse::ArgumentParser argParser("CPPInject");
+    cxxopts::Options argParser("CPPInject.exe");
 
-    argParser.add_argument("-v", "--verbose")
-        .default_value(false)
-        .implicit_value(true)
-        .help("Show more detailed logs");
+    argParser.add_options()
+        ("p,pid", "The process id of the target process to be injectd. Incompatible with --exe", cxxopts::value<int>())
+        ("d,dll", "A path to the dll to be injected. ie. \"file.dll\" or \"D:\\path\\to\\file.dll\" Incompatible with --pid", cxxopts::value<std::string>())
+        ("e,exe", "A path to the target exe to be launched and injected. ie. \"file.exe\" or \"D:\\path\\to\\file.exe\"", cxxopts::value<std::string>())
+        ("v,verbose", "Show more detailed logs", cxxopts::value<bool>()->default_value("false"))
+        ("h,help", "Print usage")
+        ;
 
-    argParser.add_argument("-d", "--dll")
-        .required()
-        .help("A path to the dll to be injected. ie. \".\file.dll\" or \"D:\\path\\to\\file.dll\"");
+    std::string sourceDLL;
+    std::string targetEXE;
+    INT targetPID;
 
-    argParser.add_argument("-e", "--exe")
-        .help("A path to the target exe to be launched and injected. ie. \".\file.exe\" or \"D:\\path\\to\\file.exe\"");
+    auto argResult = argParser.parse(argc, argv);
+    auto verbose = argResult["verbose"].as<bool>();
 
-    argParser.add_argument("-p", "--pid")
-        .help("The process id of the target process to be injectd.")
-        .scan<'i', int>();
-
-
-
-    std::string dllPath = argParser.get<std::string>("-d");
-    std::cout << "DLL Path: " << dllPath << std::endl;
-
-    std::string exePath = argParser.get<std::string>("-e");
-    std::cout << "EXE Path: " << exePath << std::endl;
-
-    int procID = argParser.get<int>("-p");
-    std::cout << "PID: " << procID << std::endl;
-
-    try {
-        argParser.parse_args(argc, argv);
-    }
-    catch (const std::runtime_error& err) {
-        std::cerr << err.what() << std::endl;
-        std::cerr << argParser;
-        std::exit(1);
-    }
-    */
-
-    if (argc == 3)
+    if (argResult.count("help"))
     {
-        if (PathFileExistsA(argv[1]) == FALSE) {
-            fprintf(stderr, "Error: Invalid path to DLL!\n");
-            return EXIT_FAILURE;
-        }
-
-        if (PathFileExistsA(argv[2]) == FALSE) {
-            fprintf(stderr, "Error: Invalid path to target executable!\n");
-            return EXIT_FAILURE;
-        }
-    }
-    else {
-        fprintf(stderr, "Invalid number of arguments!\n");
-        fprintf(stderr, "Argument1: DllPath\nArgument2: PathToTargetExe\n");
-        return EXIT_FAILURE;
+        std::cout << argParser.help() << std::endl;
+        return 101;
     }
 
-    x86Injector injector = x86Injector(argv[1]);
-    injector.LaunchAndInject(argv[2]);
+    if (argResult.count("exe") + argResult.count("pid") > 1)
+    {
+        std::cerr << "Input Error: --pid and --exe cannot be used at the same time!\n\n";
+        std::cout << argParser.help() << std::endl;
+        return -1;
+    }
+
+    if (argResult.count("pid")) {
+        targetPID = argResult["pid"].as<INT>();
+        if (verbose)
+            std::cout << "PID: " << targetPID << std::endl;
+    }
+
+    if (argResult.count("exe")) {
+        targetEXE = argResult["exe"].as<std::string>();
+        if (verbose)
+            std::cout << "EXE Path: " << targetEXE << std::endl;
+    }
+
+    if (argResult.count("dll")) {
+        sourceDLL = argResult["dll"].as<std::string>();
+        if (verbose)
+            std::cout << "DLL Path: " << sourceDLL << std::endl;
+    }
+
+    x86Injector injector = x86Injector(sourceDLL);
+
+    if (targetPID != NULL) {
+        injector.Inject(targetPID);
+    }
+
+    if (!targetEXE.empty()) {
+        injector.LaunchAndInject(targetEXE);
+    }
 
     return EXIT_SUCCESS;
-}
 
+}

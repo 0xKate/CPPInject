@@ -149,7 +149,6 @@
     <Text Include="..\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="argparse.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="x86Injector.h" />
   </ItemGroup>
