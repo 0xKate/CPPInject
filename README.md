@@ -5,10 +5,26 @@ Currently only offering LoadLibrary based injection.
 
 ## Usage
 
-Currently only provides LaunchAndInject, so it does not work with already running processes.
+Run from cmd or powershell, you cannot combine --pid and --exe.
 
-Run from the command line with 1st argument as DLL path and second argument as target exe to launch and inject.
+If you use with --exe it will automatically launch the target program and inject the dll provided with --dll.
 
+Provide --dll and --pid to inject to a running process.
+
+```
+Usage:
+  CPPInject.exe [OPTION...]
+
+  -p, --pid arg  The process id of the target process to be injectd.  
+                 Incompatible with --exe  
+  -d, --dll arg  A path to the dll to be injected. ie. "file.dll" or  
+                 "D:\path\to\file.dll" Incompatible with --pid  
+  -e, --exe arg  A path to the target exe to be launched and injected. ie.  
+                 "file.exe" or "D:\path\to\file.exe"  
+  -v, --verbose  Show more detailed logs  
+  -h, --help     Print usage  
+
+```
 
 
 ### Batch Script
@@ -16,5 +32,8 @@ Run from the command line with 1st argument as DLL path and second argument as t
 For a one click launch and inject of something you can use make a .bat file and use this batch script.
 
 ```batch
-start "" .\Injector.exe "./MyDll.dll" "D:/Path/To/Some/Executable.exe"
+start "" .\CPPInject.exe --dll "C:\path\to\file.dll" --exe "D:\path\to\file.exe"
+```
+```batch
+start "" .\CPPInject.exe --pid 11111 --exe "D:\path\to\file.exe"
 ```
