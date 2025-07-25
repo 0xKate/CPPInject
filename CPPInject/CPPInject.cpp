@@ -29,6 +29,7 @@
 #include <windows.h>
 #include <Shlwapi.h>
 #include "Injector.h"
+#include "ProcessFinder.h"
 #include "cxxopts.hpp"
 
 //#include "argparse.hpp"
@@ -50,12 +51,13 @@ int main(int argc, char** argv)
         ("d,dll", "A path to the dll to be injected. ie. \"file.dll\" or \"D:\\path\\to\\file.dll\" Incompatible with --pid", cxxopts::value<std::string>())
         ("e,exe", "A path to the target exe to be launched and injected. ie. \"file.exe\" or \"D:\\path\\to\\file.exe\"", cxxopts::value<std::string>())
         ("v,verbose", "Show more detailed logs", cxxopts::value<bool>()->default_value("false"))
+        ("n,procName", "Search for process by name.", cxxopts::value<std::string>())
         ("h,help", "Print usage")
         ;
 
     std::string sourceDLL;
     std::string targetEXE;
-    INT targetPID;
+    std::string procName;
 
     auto argResult = argParser.parse(argc, argv);
     auto verbose = argResult["verbose"].as<bool>();
@@ -72,17 +74,6 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    if (argResult.count("pid")) {
-        targetPID = argResult["pid"].as<INT>();
-        if (verbose)
-            std::cout << "PID: " << targetPID << std::endl;
-    }
-
-    if (argResult.count("exe")) {
-        targetEXE = argResult["exe"].as<std::string>();
-        if (verbose)
-            std::cout << "EXE Path: " << targetEXE << std::endl;
-    }
 
     if (argResult.count("dll")) {
         sourceDLL = argResult["dll"].as<std::string>();
@@ -97,10 +88,28 @@ int main(int argc, char** argv)
 
     Injector injector = Injector(sourceDLL);
 
+    if (argResult.count("procName") > 0) {
+        std::cout << "\nSearching for process by name.\n\n";
+        procName = argResult["procName"].as<std::string>();
+        std::wstring procNameW(procName.begin(), procName.end());
+        std::optional<DWORD> searchedPID = ProcessFinder::GetMainProcessId(procNameW);
+        if (searchedPID.has_value())
+        {
+            std::cout << "\nProcess Found! :" << searchedPID.value() << "\n\n";
+            injector.Inject(searchedPID.value());
+        }
+        else
+        {
+            std::cerr << "\nERROR: Failed to find process by name! \n\n";
+            return -1;
+        }
+        
+    }
     if (argResult.count("pid") > 0) {
-        injector.Inject(targetPID);
+        injector.Inject(argResult["pid"].as<DWORD>());
     }
     else if (argResult.count("exe") > 0) {
+        targetEXE = argResult["exe"].as<std::string>();
         injector.LaunchAndInject(targetEXE);
     }
     else {
