@@ -28,7 +28,7 @@
 #include <iostream>
 #include <windows.h>
 #include <Shlwapi.h>
-#include "x86Injector.h"
+#include "Injector.h"
 #include "cxxopts.hpp"
 
 //#include "argparse.hpp"
@@ -95,7 +95,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    x86Injector injector = x86Injector(sourceDLL);
+    Injector injector = Injector(sourceDLL);
 
     if (argResult.count("pid") > 0) {
         injector.Inject(targetPID);

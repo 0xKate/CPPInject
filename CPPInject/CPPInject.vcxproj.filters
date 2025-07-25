@@ -22,7 +22,10 @@
     <ClCompile Include="CPPInject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="x86Injector.cpp">
+    <ClCompile Include="Injector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessFinder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -43,10 +46,13 @@
     </Text>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="x86Injector.h">
+    <ClInclude Include="Injector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessFinder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

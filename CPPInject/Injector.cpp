@@ -38,37 +38,33 @@
 #include <shlwapi.h>
 #include <processthreadsapi.h>
 #include <aclapi.h>
-#include "x86Injector.h"
+#include "Injector.h"
 
-x86Injector::x86Injector(std::string dllPath) {
-    this->dllPath = dllPath;
+Injector::Injector(std::string dllPath)
+    : dllPath(std::move(dllPath)), handlesClosed(FALSE) {
 }
-HANDLE x86Injector::GetProcessHandle(DWORD dwPID)
+
+HANDLE Injector::GetProcessHandle(DWORD dwPID)
 {
-    int flags = PROCESS_VM_OPERATION
+    DWORD flags = PROCESS_VM_OPERATION
         | PROCESS_VM_READ
         | PROCESS_VM_WRITE
         | PROCESS_QUERY_INFORMATION
         | PROCESS_CREATE_THREAD;
 
-    // Attempt to open the process
     DEBUG("Attempting to open target process with simple rights");
     HANDLE hProcess = OpenProcess(flags, false, dwPID);
 
-    // If it failed, attempt to upgrade security rights.
     if (hProcess == NULL && GetLastError() == ERROR_ACCESS_DENIED) {
         printf("Failed! Access was denied!");
 
-        //// ---- Get the access control descriptor of the injector
         PACL ppDACL;
         PSECURITY_DESCRIPTOR ppSecurityDescriptor;
-        // If the function succeeds, the return value is ERROR_SUCCESS.
         DWORD errorCode;
-        //The pseudo handle from GetCurrentProcess need not be closed when it is no longer needed.
         DEBUG("Getting Injectors security descriptor and ACL...");
         errorCode = GetSecurityInfo(GetCurrentProcess(),
-            SE_KERNEL_OBJECT, // Indicates a local kernel object.
-            DACL_SECURITY_INFORMATION, // The DACL of the object is being referenced.
+            SE_KERNEL_OBJECT,
+            DACL_SECURITY_INFORMATION,
             NULL,
             NULL,
             &ppDACL,
@@ -80,10 +76,6 @@ HANDLE x86Injector::GetProcessHandle(DWORD dwPID)
             return INVALID_HANDLE_VALUE;
         }
 
-        ///// ---- Override processs permissions with Injectors permissions
-        // Attempt now to open the process with WRITE_DAC:
-        // "The right to modify the discretionary access control list (DACL)
-        // in the object's security descriptor."
         DEBUG("Opening target process with WRITE_DAC permissions...");
         hProcess = OpenProcess(WRITE_DAC, FALSE, dwPID);
 
@@ -93,14 +85,13 @@ HANDLE x86Injector::GetProcessHandle(DWORD dwPID)
             return INVALID_HANDLE_VALUE;
         }
 
-        // Set the DACL of the target process to the one we obtained from the injector
         errorCode = SetSecurityInfo(hProcess,
-            SE_KERNEL_OBJECT, // Indicates a local kernel object.
-            DACL_SECURITY_INFORMATION | // The DACL of the object is being referenced.
-            UNPROTECTED_DACL_SECURITY_INFORMATION, // Forces The DACL to inherit ACEs from the parent object.
+            SE_KERNEL_OBJECT,
+            DACL_SECURITY_INFORMATION |
+            UNPROTECTED_DACL_SECURITY_INFORMATION,
             0,
             0,
-            ppDACL, // The DACL from the Injector
+            ppDACL,
             0);
 
         if (errorCode != ERROR_SUCCESS) {
@@ -110,11 +101,9 @@ HANDLE x86Injector::GetProcessHandle(DWORD dwPID)
             return INVALID_HANDLE_VALUE;
         }
 
-        // Cleanup 
         CloseHandle(hProcess);
         LocalFree(ppSecurityDescriptor);
 
-        // Security Descriptor has been overriden, time to open with all access
         hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, dwPID);
     }
 
@@ -125,27 +114,23 @@ HANDLE x86Injector::GetProcessHandle(DWORD dwPID)
 
     return hProcess;
 }
-int x86Injector::Inject(DWORD dwPID)
+int Injector::Inject(DWORD dwPID)
 {
-    // Check if DLL exists
-    if (PathFileExistsA(this->dllPath.c_str()) == FALSE) {
-        printf("Error: DLL does not exist!");
+    if (!std::filesystem::exists(this->dllPath) || !std::filesystem::is_regular_file(this->dllPath)) {
+        std::cerr << "Error: DLL file does not exist or is invalid." << std::endl;
         return -1;
     }
 
-    // Get absolute path to DLL and size of path string
     std::filesystem::path fsAbsPath = std::filesystem::absolute(this->dllPath);
     std::string absPath = fsAbsPath.string();
-    size_t pathSize = strlen(absPath.c_str());
+    SIZE_T pathSize = absPath.size() + 1;
 
-    // Get a handle to the process
     HANDLE hProcess = GetProcessHandle(dwPID);
     if (hProcess == INVALID_HANDLE_VALUE) {
         fprintf(stderr, "Unable to obtain HANDLE for PID: %d\n", dwPID);
         return -1;
     }
 
-    // Allocate a buffer in the target processes memory for the dll path argument
     LPVOID lpBuffer = VirtualAllocEx(hProcess, NULL, pathSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     if (lpBuffer == NULL) {
         fprintf(stderr, "Failed to allocate buffer!\n");
@@ -153,7 +138,6 @@ int x86Injector::Inject(DWORD dwPID)
         return -1;
     }
 
-    // Write the DLL path to the memory we just allocated
     printf("Writing path to memory: %s\n", absPath.c_str());
     BOOL errorCode = WriteProcessMemory(hProcess, lpBuffer, absPath.c_str(), pathSize, NULL);
     if (errorCode == NULL) {
@@ -163,7 +147,6 @@ int x86Injector::Inject(DWORD dwPID)
         return -1;
     }
 
-    // Get a handle to the KERNEL32.dll module (this type of handle need not be closed)
     HMODULE hMod = GetModuleHandleA("KERNEL32.dll");
     if (hMod == NULL) {
         fprintf(stderr, "Could not find KERNEL32 Module! %lu\n", GetLastError());
@@ -172,8 +155,7 @@ int x86Injector::Inject(DWORD dwPID)
         return -1;
     }
 
-    // Get the address of LoadLibraryA inside target process
-    FARPROC lpLoadLibraryAddress = GetProcAddress(hMod, "LoadLibraryA");
+    LPVOID lpLoadLibraryAddress = (LPVOID)GetProcAddress(hMod, "LoadLibraryA");
     if (lpLoadLibraryAddress == NULL) {
         fprintf(stderr, "Could not find LoadLibraryA address %lu\n", GetLastError());
         VirtualFreeEx(hProcess, lpBuffer, 0, MEM_RELEASE);
@@ -181,10 +163,7 @@ int x86Injector::Inject(DWORD dwPID)
         return -1;
     }
 
-    // Start a remote thread in the injected process,
-    // thread will call function at the address of LoadLibraryA
-    // with the buffer we wrote the dll path to.
-    HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, (PTHREAD_START_ROUTINE)lpLoadLibraryAddress, lpBuffer, 0, NULL);
+    HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(lpLoadLibraryAddress), lpBuffer, 0, NULL);
     if (hThread == NULL) {
         fprintf(stderr, "Unable to create remote thread!\n");
         VirtualFreeEx(hProcess, lpBuffer, 0, MEM_RELEASE);
@@ -192,10 +171,8 @@ int x86Injector::Inject(DWORD dwPID)
         return -1;
     }
 
-    // Wait for LoadLibraryA to finish or else thread will crash
     WaitForSingleObject(hThread, INFINITE);
 
-    // Cleanup
     VirtualFreeEx(hProcess, lpBuffer, 0, MEM_RELEASE);
     CloseHandle(hThread);
     CloseHandle(hProcess);
@@ -204,16 +181,16 @@ int x86Injector::Inject(DWORD dwPID)
 
     return 1;
 }
-int x86Injector::LaunchAndInject(std::string exePath)
+int Injector::LaunchAndInject(std::string exePath)
 {
-    STARTUPINFO  sInfo;
-    PROCESS_INFORMATION  pInfo;
+    STARTUPINFOA sInfo;
+    PROCESS_INFORMATION pInfo;
 
     ZeroMemory(&sInfo, sizeof(sInfo));
-    sInfo.cb = sizeof(sInfo); // The size of the structure, in bytes.
+    sInfo.cb = sizeof(sInfo);
     ZeroMemory(&pInfo, sizeof(pInfo));
 
-    if (CreateProcessA(exePath.c_str(), NULL, NULL, NULL, FALSE, 0, NULL, NULL, (LPSTARTUPINFOA)&sInfo, &pInfo)) {
+    if (CreateProcessA(exePath.c_str(), NULL, NULL, NULL, FALSE, 0, NULL, NULL, &sInfo, &pInfo)) {
         std::cout << "Process created!" << std::endl;
         CloseHandle(pInfo.hThread);
         CloseHandle(pInfo.hProcess);

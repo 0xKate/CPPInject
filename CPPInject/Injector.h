@@ -30,13 +30,13 @@
 #include <windows.h>
 #include <string>
 
-class x86Injector
+class Injector
 {
 private:
     std::string dllPath;
     BOOL handlesClosed;
 public:
-    x86Injector(std::string dllPath);
+    Injector(std::string dllPath);
     HANDLE GetProcessHandle(DWORD dwPID);
     int Inject(DWORD dwPID);
     int LaunchAndInject(std::string exePath);
