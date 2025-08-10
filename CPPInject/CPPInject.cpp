@@ -89,7 +89,7 @@ int main(int argc, char** argv)
     Injector injector = Injector(sourceDLL);
 
     if (argResult.count("procName") > 0) {
-        std::cout << "\nSearching for process by name.\n\n";
+        std::cout << "\nSearching for process by name.\n";
         procName = argResult["procName"].as<std::string>();
         std::wstring procNameW(procName.begin(), procName.end());
         std::optional<DWORD> searchedPID = ProcessFinder::GetMainProcessId(procNameW);
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
         }
         
     }
-    if (argResult.count("pid") > 0) {
+    else if (argResult.count("pid") > 0) {
         injector.Inject(argResult["pid"].as<DWORD>());
     }
     else if (argResult.count("exe") > 0) {
