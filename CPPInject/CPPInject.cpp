@@ -31,6 +31,7 @@
 #include "Injector.h"
 #include "ProcessFinder.h"
 #include "cxxopts.hpp"
+#include "ManualMap.h"
 
 //#include "argparse.hpp"
 
@@ -52,6 +53,7 @@ int main(int argc, char** argv)
         ("e,exe", "A path to the target exe to be launched and injected. ie. \"file.exe\" or \"D:\\path\\to\\file.exe\"", cxxopts::value<std::string>())
         ("v,verbose", "Show more detailed logs", cxxopts::value<bool>()->default_value("false"))
         ("n,procName", "Search for process by name.", cxxopts::value<std::string>())
+        ("m,manualMap", "Use manual map injection.", cxxopts::value<bool>()->default_value("false"))
         ("h,help", "Print usage")
         ;
 
@@ -61,6 +63,7 @@ int main(int argc, char** argv)
 
     auto argResult = argParser.parse(argc, argv);
     auto verbose = argResult["verbose"].as<bool>();
+    auto manualMap = argResult["manualMap"].as<bool>();
 
     if (argResult.count("help"))
     {
@@ -87,7 +90,6 @@ int main(int argc, char** argv)
     }
 
     Injector injector = Injector(sourceDLL);
-
     if (argResult.count("procName") > 0) {
         std::cout << "\nSearching for process by name.\n";
         procName = argResult["procName"].as<std::string>();
@@ -96,7 +98,15 @@ int main(int argc, char** argv)
         if (searchedPID.has_value())
         {
             std::cout << "\nProcess Found! :" << searchedPID.value() << "\n\n";
-            injector.Inject(searchedPID.value());
+
+            printf("%d\n", manualMap);
+
+            if (manualMap) {
+                CPPInject::ManualMapInjection(searchedPID.value(), sourceDLL);
+                std::cout << "\INFO: Running manual map injector! \n\n";
+            }
+            else
+                injector.Inject(searchedPID.value());
         }
         else
         {
@@ -106,7 +116,13 @@ int main(int argc, char** argv)
         
     }
     else if (argResult.count("pid") > 0) {
-        injector.Inject(argResult["pid"].as<DWORD>());
+
+        if (manualMap) {
+            CPPInject::ManualMapInjection(argResult["pid"].as<DWORD>(), sourceDLL);
+        }
+        else
+            injector.Inject(argResult["pid"].as<DWORD>());
+
     }
     else if (argResult.count("exe") > 0) {
         targetEXE = argResult["exe"].as<std::string>();
@@ -118,5 +134,4 @@ int main(int argc, char** argv)
     }
 
     return EXIT_SUCCESS;
-
 }

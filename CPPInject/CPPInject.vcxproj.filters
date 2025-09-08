@@ -55,6 +55,9 @@
     <ClInclude Include="ProcessFinder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ManualMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="CPPInject.rc">

@@ -166,6 +166,7 @@
     <Text Include="..\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ManualMap.h" />
     <ClInclude Include="ProcessFinder.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Injector.h" />

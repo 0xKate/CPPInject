@@ -37,7 +37,7 @@ private:
     BOOL handlesClosed;
 public:
     Injector(std::string dllPath);
-    HANDLE GetProcessHandle(DWORD dwPID);
+    static HANDLE GetProcessHandle(DWORD dwPID);
     int Inject(DWORD dwPID);
     int LaunchAndInject(std::string exePath);
 };
